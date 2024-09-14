@@ -1,10 +1,14 @@
-﻿namespace AuctionsApp.Entities
+﻿using AuctionsApp.Interfaces;
+using AuctionsApp.Resources;
+
+namespace AuctionsApp.Entities
 {
-    public class Auction
+    public class Auction : IAuction
     {
-        public Car AuctionedCar { get; set; }
+        public Guid AuctionId { get; private set; }
+        public Car AuctionedCar { get; private set; }
         public bool IsActive { get; private set; }
-        public decimal HighestBid { get; set; }
+        public decimal HighestBid { get; private set; }
 
         public Auction(Car auctionedCar)
         {
@@ -13,29 +17,26 @@
             HighestBid = auctionedCar.StartingBid;
         }
 
-        public void StartAuction()
+        public void Start()
         {
-            if (IsActive)
-                throw new InvalidOperationException("Auction is already active.");
-
             IsActive = true;
         }
 
-        public void PlaceBid(string bidder, decimal amount)
+        public void Bid(decimal amount)
         {
             if (!IsActive)
-                throw new InvalidOperationException("Auction is not active.");
+                throw new InvalidOperationException(ErrorMessage.ErrorAuctionIsNotActive);
 
             if (amount <= HighestBid)
-                throw new InvalidOperationException("Bid amount must be higher than the current highest bid.");
+                throw new InvalidOperationException(ErrorMessage.ErrorBidAmountLowerThanHighestAmount);
 
             HighestBid = amount;
         }
 
-        public void CloseAuction()
+        public void Close()
         {
             if (!IsActive)
-                throw new InvalidOperationException("Auction is not active.");
+                throw new InvalidOperationException(ErrorMessage.ErrorAuctionIsNotActive);
 
             IsActive = false;
         }

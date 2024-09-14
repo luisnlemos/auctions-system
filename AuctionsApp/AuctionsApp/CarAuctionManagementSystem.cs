@@ -1,137 +1,164 @@
 ﻿using AuctionsApp.Const;
 using AuctionsApp.Entities;
 using AuctionsApp.Interfaces;
+using AuctionsApp.Resources;
 
 namespace AuctionsApp
 {
-    public class CarAuctionManagementSystem : ICarInventory, IAuctionInventory
+    public class CarAuctionManagementSystem : IAuctionInventory, IAuctionList
     {
-        private List<Car> _carsInventory = new List<Car>();
-        private List<Auction> _auctionsInventory = new List<Auction>();
+        private List<Car> auctionInventory = new List<Car>();
+        private List<IAuction> auctionList = new List<IAuction>();
 
-        public void AddCarsList(List<Car> cars)
+        #region Aux Methods
+        
+        private bool HasCarActiveAuction(Guid carId)
         {
-            _carsInventory.AddRange(cars);
+            return auctionList.Any(a => a.AuctionedCar.Id == carId && a.IsActive);
         }
 
-        public void AddCar(Car car)
+        private IAuction? GetActiveAuctionByCarId(Guid carId)
         {
-            if (_carsInventory.Any(x => x.Id == car.Id))
-                throw new InvalidOperationException("Car with this ID already exists.");
-
-            _carsInventory.Add(car);
+            return auctionList.FirstOrDefault(a => a.AuctionedCar.Id == carId && a.IsActive);
         }
-                
 
-        public List<Car> SearchCars(string criteria, string value)
+        #endregion
+
+        #region Auction Inventory
+
+        /// <summary>
+        /// Gets the current CarInventory
+        /// </summary>
+        /// <returns>Car List</returns>
+        public List<Car> GetAuctionInventory()
         {
-            switch (criteria)
-            { 
+            return auctionInventory;
+        }
+
+        /// <summary>
+        /// Bulk addition of Cars in the Car Inventory
+        /// </summary>
+        /// <param name="newCars">Car List</param>
+        public void AddCarsList(List<Car> newCars)
+        {
+            auctionInventory.AddRange(newCars);
+        }
+
+        /// <summary>
+        /// Add Car in the Car Inventory
+        /// </summary>
+        /// <param name="newCar">Car</param>
+        /// <exception cref="InvalidOperationException">Throw error for Duplicated Id in Car Inventory</exception>
+        public void AddCar(Car newCar)
+        {
+            if (auctionInventory.Any(x => x.Id == newCar.Id))
+                throw new InvalidOperationException(ErrorMessage.ErrorDuplicatedCarId);
+
+            auctionInventory.Add(newCar);
+        }
+
+        /// <summary>
+        /// Search for a defined Car property and its corresponding value in the Car Inventory
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="value"></param>
+        /// <returns>Car List</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public List<Car> SearchCars(string property, string value)
+        {
+            switch (property)
+            {
                 case SearchCriteria.Type:
-                    return _carsInventory.Where(x => x.Type.Equals(value)).ToList();
+                    return auctionInventory.Where(x => x.Type.Equals(value)).ToList();
                 case SearchCriteria.Manufacturer:
-                    return _carsInventory.Where(x => x.Manufacturer.StartsWith(value)).ToList();
+                    return auctionInventory.Where(x => x.Manufacturer.StartsWith(value)).ToList();
                 case SearchCriteria.Model:
-                    return _carsInventory.Where(x => x.Model.StartsWith(value)).ToList();
+                    return auctionInventory.Where(x => x.Model.StartsWith(value)).ToList();
                 case SearchCriteria.Year:
-                    return _carsInventory.Where(x => x.Year.Equals(value)).ToList();
+                    return auctionInventory.Where(x => x.Year.Equals(value)).ToList();
                 default:
-                    throw new InvalidOperationException("Invalid search criteria");
+                    throw new InvalidOperationException(ErrorMessage.ErrorInvalidSearchCriteria);
             }
         }
 
-        public void CloseAuction(Guid carId)
+        #endregion
+
+        #region Auctions
+
+        /// <summary>
+        /// Gets the current AuctionInventory
+        /// </summary>
+        /// <returns>IAuction List</returns>
+        public List<IAuction> GetAuctionList()
         {
-            throw new NotImplementedException();
+            return auctionList;
         }
 
-        public void PlaceBid(Guid carId, string bidder, decimal bidAmount)
+        /// <summary>
+        /// Start a car auction
+        /// </summary>
+        /// <param name="carId">Guid</param>
+        /// <returns>IAuction?</returns>
+        /// <exception cref="InvalidOperationException">Throws an error if this car does not exists in the inventory or this car is already in an active auction</exception>
+        public IAuction? StartAuction(Guid carId)
         {
-            throw new NotImplementedException();
+            if (!auctionInventory.Any(x => x.Id == carId))
+                throw new InvalidOperationException(ErrorMessage.ErrorCarNotFound);
+
+            if (HasCarActiveAuction(carId))
+                throw new InvalidOperationException(ErrorMessage.ErrorCarInActiveAuction);
+
+            var car = auctionInventory.First(x => x.Id == carId);
+
+            IAuction auction = new Auction(car);
+
+            auction.Start();
+
+            auctionList.Add(auction);
+
+            return auction;
         }
 
-        public void StartAuction(Guid carId)
+        /// <summary>
+        /// Close a car active auction
+        /// </summary>
+        /// <param name="carId">Guid</param>
+        /// <returns>Auction?</returns>
+        /// <exception cref="InvalidOperationException">Throws an error if not found an active auction for this car</exception>
+        public IAuction? CloseAuction(Guid carId)
         {
-            throw new NotImplementedException();
+            if (!HasCarActiveAuction(carId))
+            {
+                throw new InvalidOperationException(ErrorMessage.ErrorActiveAuctionForCarNotFound);
+            }
+
+            IAuction? auction = GetActiveAuctionByCarId(carId);
+
+            auction?.Close();
+
+            return auction;
         }
 
-        public List<Car> GetCarInventory()
+        /// <summary>
+        /// Place a bid for a car active auction
+        /// </summary>
+        /// <param name="carId">Guid</param>
+        /// <param name="bidAmount">decimal</param>
+        /// <returns>IAuction?</returns>
+        /// <exception cref="InvalidOperationException">Throws an error if not found an active auction for this car</exception>
+        public IAuction? BidAuction(Guid carId, decimal bidAmount)
         {
-            return _carsInventory;
+            if (!HasCarActiveAuction(carId))
+                throw new InvalidOperationException(ErrorMessage.ErrorActiveAuctionForCarNotFound);
+
+            IAuction? auction = GetActiveAuctionByCarId(carId);
+
+            auction?.Bid(bidAmount);
+
+            return auction;
         }
 
-        public List<Auction> GetAuctionInventory()
-        {
-            return _auctionsInventory;
-        }
-
-        
-
-        //public IEnumerable<Car> SearchCars(string criteria, string value)
-        //{
-        //    IEnumerable<Car> result;
-
-        //    switch (criteria)
-        //    { 
-        //        case SearchCriteria.Type:
-        //            result = _carsInventory.Where(x => x.Type.Equals(value));
-        //            break;
-        //        case SearchCriteria.Manufacturer:
-        //            result = _carsInventory.Where(x => x.Manufacturer.Equals(value));
-        //            break;
-        //        case SearchCriteria.Model:
-        //            result = _carsInventory.Where(x => x.Model.Equals(value));
-        //            break;
-        //        case SearchCriteria.Year:
-        //            result = _carsInventory.Where(x => x.Year.Equals(value));
-        //            break;
-        //        default:
-        //            throw new InvalidOperationException("Invalid search criteria");
-        //    }
-
-        //    return result;
-        //}
-
-        //public void StartAuction(Guid carId)
-        //{
-        //    var car = _carsInventory.FirstOrDefault(c => c.Id == carId);
-        //    if (car == null)
-        //    {
-        //        throw new InvalidOperationException("Car not found in inventory.");
-        //    }
-
-        //    if (_auctionsInventory.Any(a => a.AuctionedCar.Id == carId && a.IsActive))
-        //    {
-        //        throw new InvalidOperationException("An active auction for this car already exists.");
-        //    }
-
-        //    var auction = new Auction(car);
-        //    auction.StartAuction();
-        //    _auctionsInventory.Add(auction);
-        //}
-
-        //public void PlaceBid(Guid carId, string bidder, decimal bidAmount)
-        //{
-        //    var auction = _auctionsInventory.FirstOrDefault(a => a.AuctionedCar.Id == carId && a.IsActive);
-        //    if (auction == null)
-        //    {
-        //        throw new InvalidOperationException("No active auction found for this car.");
-        //    }
-
-        //    auction.PlaceBid(bidder, bidAmount);
-        //}
-
-        //public void CloseAuction(Guid carId)
-        //{
-        //    var auction = _auctionsInventory.FirstOrDefault(a => a.AuctionedCar.Id == carId && a.IsActive);
-        //    if (auction == null)
-        //    {
-        //        throw new InvalidOperationException("No active auction found for this car.");
-        //    }
-
-        //    auction.CloseAuction();
-        //}
-
+        #endregion
 
     }
 }

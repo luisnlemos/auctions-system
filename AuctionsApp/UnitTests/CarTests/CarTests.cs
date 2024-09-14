@@ -4,6 +4,9 @@ using AuctionsApp.Entities;
 
 namespace UnitTests.CarTests
 {
+    /// <summary>
+    /// Validates each car type creation using Factory
+    /// </summary>
     [TestFixture]
     public class CarTests
     {

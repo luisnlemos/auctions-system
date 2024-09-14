@@ -2,10 +2,10 @@
 
 namespace AuctionsApp.Interfaces
 {
-    public interface ICarInventory
+    public interface IAuctionInventory
     {
         void AddCar(Car car);
-        List<Car> SearchCars(string criteria, string value);
-        List<Car> GetCarInventory();
+        List<Car> SearchCars(string property, string value);
+        List<Car> GetAuctionInventory();
     }
 }

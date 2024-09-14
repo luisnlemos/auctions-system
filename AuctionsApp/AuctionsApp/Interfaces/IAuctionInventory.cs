@@ -2,11 +2,11 @@
 
 namespace AuctionsApp.Interfaces
 {
-    public interface IAuctionInventory
+    public interface IAuctionList
     {
-        void StartAuction(Guid carId);
-        void PlaceBid(Guid carId, string bidder, decimal bidAmount);
-        void CloseAuction(Guid carId);
-        List<Auction> GetAuctionInventory();
+        IAuction? StartAuction(Guid carId);
+        IAuction? BidAuction(Guid carId, decimal bidAmount);
+        IAuction? CloseAuction(Guid auctionId);
+        List<IAuction> GetAuctionList();
     }
 }
