@@ -5,7 +5,7 @@ using AuctionsApp.Resources;
 
 namespace AuctionsApp
 {
-    public class CarAuctionManagementSystem : IAuctionInventory, IAuctionList
+    public class CarAuctionManagementSystem : IAuctionOperations
     {
         private List<Car> auctionInventory = new List<Car>();
         private List<IAuction> auctionList = new List<IAuction>();
