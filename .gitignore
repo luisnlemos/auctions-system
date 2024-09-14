@@ -5,3 +5,6 @@
 /AuctionsApp/.vs
 /.vs
 /AuctionsApp/AuctionsApp/obj
+/AuctionsApp/AuctionsApp/bin/Debug/net8.0
+/AuctionsApp/UnitTests/bin/Debug/net8.0
+/AuctionsApp/UnitTests/obj
