@@ -102,11 +102,8 @@ namespace AuctionsApp
         /// <exception cref="InvalidOperationException">Throws an error if this car does not exists in the inventory or this car is already in an active auction</exception>
         public IAuction? StartAuction(Guid carId)
         {
-            if (!auctionInventory.Any(x => x.Id == carId))
-                throw new InvalidOperationException(ErrorMessage.ErrorCarNotFound);
-
-            if (HasCarActiveAuction(carId))
-                throw new InvalidOperationException(ErrorMessage.ErrorCarInActiveAuction);
+            if (!auctionInventory.Any(x => x.Id == carId) || HasCarActiveAuction(carId))
+                throw new InvalidOperationException(ErrorMessage.ErrorCarNotFoundOrInActiveAuction);
 
             var car = auctionInventory.First(x => x.Id == carId);
 
@@ -152,6 +149,9 @@ namespace AuctionsApp
                 throw new InvalidOperationException(ErrorMessage.ErrorActiveAuctionForCarNotFound);
 
             IAuction? auction = GetActiveAuctionByCarId(carId);
+
+            if (bidAmount <= auction?.HighestBid)
+                throw new InvalidOperationException(ErrorMessage.ErrorBidAmountLowerThanHighestAmount);
 
             auction?.Bid(bidAmount);
 

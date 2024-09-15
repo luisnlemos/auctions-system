@@ -115,6 +115,15 @@ namespace AuctionsApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Car not found in inventory or is already in active auction..
+        /// </summary>
+        public static string ErrorCarNotFoundOrInActiveAuction {
+            get {
+                return ResourceManager.GetString("ErrorCarNotFoundOrInActiveAuction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Car Id already exists..
         /// </summary>
         public static string ErrorDuplicatedCarId {

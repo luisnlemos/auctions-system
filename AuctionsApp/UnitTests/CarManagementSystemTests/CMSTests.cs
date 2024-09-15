@@ -67,6 +67,8 @@ namespace UnitTests.CarManagementSystemTests
 
         #endregion
 
+        #region Search Tests
+
         /// <summary>
         /// Validates if each car in the list returned match the column input criteria
         /// </summary>
@@ -103,8 +105,12 @@ namespace UnitTests.CarManagementSystemTests
             Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorInvalidSearchCriteria));
         }
 
+        #endregion
+
+        #region AddCar Tests
+
         [TestCase("Nissan", "Sentra", 2013, 9000)]
-        public void AddCar_ToAuctionInventoryWithSuccess(string manufacturer, string model, int year, decimal startingBid)
+        public void AddCar_ToAuctionInventoryIncrementsInventoryWithSuccess(string manufacturer, string model, int year, decimal startingBid)
         {
             var initialInventoryCount = auctionInventory.Count;
 
@@ -128,5 +134,139 @@ namespace UnitTests.CarManagementSystemTests
 
             Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorDuplicatedCarId));
         }
+
+        #endregion
+
+        #region StartAuction Tests
+
+        [TestCase]
+        public void StartAuction_AuctionIsActiveWithSuccess()
+        {
+            var carId = auctionInventory.First().Id;
+
+            IAuction? startAuction = mgmtSystem.StartAuction(carId);
+
+            Assert.That(startAuction, Is.Not.Null);
+            Assert.IsTrue(startAuction.IsActive);
+        }
+
+        [TestCase]
+        public void StartAuction_WithNotFoundCarReturnsError()
+        {
+            Guid nonExistentCarId = Guid.NewGuid();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mgmtSystem.StartAuction(nonExistentCarId));
+
+            Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorCarNotFoundOrInActiveAuction));
+        }
+
+        [TestCase]
+        public void StartAuction_WithCarInActiveAuctionReturnsError()
+        {
+            var carId = auctionInventory.First().Id;
+
+            IAuction? startAuction = mgmtSystem.StartAuction(carId);
+
+            Assert.That(startAuction, Is.Not.Null);
+            Assert.IsTrue(startAuction.IsActive);
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mgmtSystem.StartAuction(carId));
+
+            Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorCarNotFoundOrInActiveAuction));
+        }
+
+        #endregion
+
+        #region BidAuction Tests
+
+        [TestCase(1000)]
+        public void BidAuction_IncreasedAuctionHighestBidWithSuccess(decimal increaseAmount)
+        {
+            var carId = auctionInventory.First().Id;
+
+            IAuction? auctionActive = mgmtSystem.StartAuction(carId);
+
+            Assert.That(auctionActive, Is.Not.Null);
+            Assert.IsTrue(auctionActive.IsActive);
+
+            var increasedBid = auctionActive.HighestBid + increaseAmount;
+
+            var newHighestBid = mgmtSystem.BidAuction(carId, increasedBid)?.HighestBid;
+
+            Assert.That(newHighestBid, Is.Not.Null);
+            Assert.That(increasedBid, Is.EqualTo(newHighestBid));
+        }
+
+        [TestCase(1000)]
+        public void BidAuction_WithoutCarInActiveAuctionReturnsError(decimal increaseAmount)
+        {
+            var car = auctionInventory.First();
+
+            var increasedBid = car.StartingBid + increaseAmount;
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mgmtSystem.BidAuction(car.Id, increasedBid));
+
+            Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorActiveAuctionForCarNotFound));
+        }
+
+        [TestCase(0)]
+        [TestCase(1000)]
+        public void BidAuction_WithBidAmountNotHigherThanHighestAmountReturnsError(decimal decreaseHighestBid)
+        {
+            var carId = auctionInventory.First().Id;
+
+            IAuction? auctionActive = mgmtSystem.StartAuction(carId);
+
+            Assert.That(auctionActive, Is.Not.Null);
+            Assert.IsTrue(auctionActive.IsActive);
+
+            var increasedBid = auctionActive.HighestBid - decreaseHighestBid;
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mgmtSystem.BidAuction(carId, increasedBid));
+
+            Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorBidAmountLowerThanHighestAmount));
+        }
+
+        #endregion
+
+        #region CloseAuction Tests
+
+        [TestCase]
+        public void CloseAuction_AuctionIsNotActiveWithSuccess()
+        {
+            var carId = auctionInventory.First().Id;
+
+            IAuction? startAuction = mgmtSystem.StartAuction(carId);
+
+            Assert.That(startAuction, Is.Not.Null);
+            Assert.IsTrue(startAuction.IsActive);
+
+            IAuction? closeAuction = mgmtSystem.CloseAuction(carId);
+
+            Assert.That(startAuction, Is.Not.Null);
+            Assert.IsFalse(startAuction.IsActive);
+        }
+
+        [TestCase]
+        public void CloseAuction_AuctionCarNotFoundReturnsEror()
+        {
+            var nonExistentCarId = Guid.NewGuid();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mgmtSystem.CloseAuction(nonExistentCarId));
+
+            Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorActiveAuctionForCarNotFound));
+        }
+
+        [TestCase]
+        public void CloseAuction_AuctionAlreadyNotActiveReturnsEror()
+        {
+            var carId = auctionInventory.First().Id;
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mgmtSystem.CloseAuction(carId));
+
+            Assert.That(exception.Message, Is.EqualTo(ErrorMessage.ErrorActiveAuctionForCarNotFound));
+        }
+
+        #endregion
     }
 }

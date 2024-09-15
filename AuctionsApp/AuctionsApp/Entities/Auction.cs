@@ -24,20 +24,11 @@ namespace AuctionsApp.Entities
 
         public void Bid(decimal amount)
         {
-            if (!IsActive)
-                throw new InvalidOperationException(ErrorMessage.ErrorAuctionIsNotActive);
-
-            if (amount <= HighestBid)
-                throw new InvalidOperationException(ErrorMessage.ErrorBidAmountLowerThanHighestAmount);
-
             HighestBid = amount;
         }
 
         public void Close()
         {
-            if (!IsActive)
-                throw new InvalidOperationException(ErrorMessage.ErrorAuctionIsNotActive);
-
             IsActive = false;
         }
     }

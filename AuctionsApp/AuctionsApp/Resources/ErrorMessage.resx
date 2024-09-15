@@ -135,10 +135,13 @@
   <data name="ErrorAuctionIsNotActive" xml:space="preserve">
     <value>Auction is not active.</value>
   </data>
-  <data name="ErrorBidAmountLowerThanHighestAmount" xml:space="preserve">
-    <value>Bid amount is equal or lower than the highest bid amount.</value>
-  </data>
   <data name="ErrorActiveAuctionForCarNotFound" xml:space="preserve">
     <value>Not found an active auction for this car.</value>
+  </data>
+  <data name="ErrorCarNotFoundOrInActiveAuction" xml:space="preserve">
+    <value>Car not found in inventory or is already in active auction.</value>
+  </data>
+  <data name="ErrorBidAmountLowerThanHighestAmount" xml:space="preserve">
+    <value>Bid amount is equal or lower than the highest bid amount.</value>
   </data>
 </root>
