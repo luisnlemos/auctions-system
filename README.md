@@ -1,4 +1,4 @@
-AuctionsApp
+Car Auction Management System:
 I decided to implement a solution without a database or front-end, due to time management considerations, focusing instead on meeting the requirements and delivering a well-structured, scalable system. 
 I opted for the use of the Factory pattern to build the Car model (superclass) and Car types – Sedan, Truck, Hatchback, and SUV – (subclasses). 
 This choice was made because of the distinct properties between the four types of cars, allowing the system to be prepared to handle new car types in the future. 
